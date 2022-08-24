@@ -71,7 +71,7 @@ CHAVE_PIX=
 WHATSAPP_BASE_URL= Url do projeto no WhatsAppp
 WHATSAPP_SECRET_KEY= Chave Secreta
 WHATSAPP_SESSION="Nome da sessão gerada no servidor do WhastApp"
-NOTIFY_SEND_BOLETO_WHATSAPP="Número que irá receber uma mensgem, quando o envio pelo whats for finalziado"
+NOTIFY_SEND_BOLETO_WHATSAPP="Número que irá receber uma mensgem, quando o envio pelo whats for finalizado"
 ```
 
 Rode as migrations
