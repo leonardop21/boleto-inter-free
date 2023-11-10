@@ -5,20 +5,6 @@ Sistema para geração e envio de boleto automaticamente através do banco inter
 
 # A versão pró agora inclui a capacidade de gerar, enviar e baixar automaticamente, bem como manualmente, boletos ou Pix.
 
-# Versão Free
-
-- Cadastro de clientes
-- Cadastro de Serviços
-- Atrelar serviços a clientes
-- Geração automática de boleto
-- Geração de boleto avulso
-- Envio automático de boleto via E-mail
-- Envio automático de boleto via WhatsApp
-- Envio de boleto avulso via E-mail
-- Envio de boleto avulso via WhatsApp
-- Consulta de saldo na conta do Inter
-
-
 ## Versão Pro
 - Cadastro de clientes
 - Cadastro de Serviços
@@ -44,6 +30,21 @@ Sistema para geração e envio de boleto automaticamente através do banco inter
 - Baixa automática de Pix
 - Alerta no WhatsApp sobre baixas automática no boleto
 - Integração com o Bugsnag (Acomanhar erros na aplicação)
+
+
+# Versão Free
+
+- Cadastro de clientes
+- Cadastro de Serviços
+- Atrelar serviços a clientes
+- Geração automática de boleto
+- Geração de boleto avulso
+- Envio automático de boleto via E-mail
+- Envio automático de boleto via WhatsApp
+- Envio de boleto avulso via E-mail
+- Envio de boleto avulso via WhatsApp
+- Consulta de saldo na conta do Inter
+
 
 
 ## Requerimentos
