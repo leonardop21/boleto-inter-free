@@ -3,6 +3,8 @@
 
 Sistema para geração e envio de boleto automaticamente através do banco inter para conta PJ (Não funciona para MEI)
 
+# A versão pró agora inclui a capacidade de gerar, enviar e baixar automaticamente, bem como manualmente, boletos ou Pix.
+
 # Versão Free
 
 - Cadastro de clientes
