@@ -28,12 +28,18 @@ Sistema para geração e envio de boleto automaticamente através do banco inter
 - Envio automático de boleto via WhatsApp
 - Envio de boleto avulso via E-mail
 - Envio de boleto avulso via WhatsApp
+- Geração automática de Pix
+- Geração de pix avulso
+- Envio automático de pix por e-mail e WhatsApp
+- Envio de pix avulso por e-mail e WhatsApp
 - Consulta de saldo na conta do Inter
 - Saldo em aberto de boletos não pagos no mês
 - Saldo de boletos vencidos no mês
+- Saldo de pix recebido
+- Saldo total de boleto + pix recebido
 - E-mail de lembrete de vencimento de fatura
-- Cancelamento de boletos em massa
 - Baixa automática de boleto
+- Baixa automática de Pix
 - Alerta no WhatsApp sobre baixas automática no boleto
 - Integração com o Bugsnag (Acomanhar erros na aplicação)
 
