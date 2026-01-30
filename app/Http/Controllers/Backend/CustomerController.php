@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Backend;
 
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\CustomerRequest;
-use App\Interfaces\CustomerInterface;
-use App\Interfaces\ServiceInterface;
 use App\Services\InterService;
+use App\Http\Controllers\Controller;
+use App\Interfaces\ServiceInterface;
+use App\Interfaces\CustomerInterface;
+use App\Http\Requests\CustomerRequest;
+use App\Interfaces\CustomerNfeTypeInterface;
+use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
@@ -16,11 +17,12 @@ class CustomerController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function __construct(CustomerInterface $customer, ServiceInterface $serviceProvided, InterService $interService)
+    public function __construct(CustomerInterface $customer, ServiceInterface $serviceProvided, InterService $interService, CustomerNfeTypeInterface $customerNfeType)
     {
         $this->customer = $customer;
         $this->serviceProvided = $serviceProvided;
         $this->interService = $interService;
+        $this->customerNfeType = $customerNfeType;
     }
 
     public function index()
@@ -41,7 +43,8 @@ class CustomerController extends Controller
     public function create()
     {
         $services = $this->serviceProvided->get(true);
-        return view('Backend.Customer.create', compact('services'));
+        $nfeTypes = $this->customerNfeType->get();
+        return view('Backend.Customer.create', compact('services', 'nfeTypes'));
     }
 
     /**
@@ -79,12 +82,13 @@ class CustomerController extends Controller
         $customer = $this->customer->find($id);
         $services = $this->serviceProvided->get(true);
         $states = $this->states();
+        $nfeTypes = $this->customerNfeType->get();
 
         foreach($customer->services as $serviceSelected){
             $selectedService[] = $serviceSelected->id;
         }
 
-        return view('Backend.Customer.edit', compact('customer', 'states', 'selectedService', 'services'));
+        return view('Backend.Customer.edit', compact('customer', 'states', 'selectedService', 'services', 'nfeTypes'));
     }
 
     /**
@@ -99,6 +103,11 @@ class CustomerController extends Controller
         $this->customer->update($request->all(), $id);
         return redirect()->route('backend.customer.index')
             ->with(['message' => 'Cliente atualizado com sucesso!', 'alert-type' => 'success']);
+    }
+
+    public function search(Request $request){
+        $records = $this->customer->search($request->search, $request->type_search);
+        return view('Backend.Customer.index', compact('records'));
     }
 
     /**

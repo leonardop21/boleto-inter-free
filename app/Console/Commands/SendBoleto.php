@@ -78,10 +78,10 @@ class SendBoleto extends Command
             $this->boleto->successSendBoleto($success_ids);
         }
 
-        $this->logs("{$prefixLog} Envios por e-mail finalizado. Chamando envios pelo WhatsApp \n\n");
-        $key = env("WHATSAPP_SECRET_KEY");
+        $this->logs("{$prefixLog} Envios por e-mail finalizado. Chamando envios via Notifish \n\n");
+        $key = env("NOTIFISH_UUID");
 
-        if(!empty($key)){
+        if (!empty($key)) {
             $this->call("ln:send-whatsapp", ["boletos_id" => $boletos_id]);
         }
     }

@@ -56,7 +56,7 @@ class DownloadBoleto extends Command
            $this->logs("{$prefixLog} resposta {$response}");
         }
 
-        $this->logs("{$prefixLog} finalizado o download de boletos, chamando a tarefa de envio \n\n");
+        $this->logs("{$prefixLog} finalizado o download de boletos, chamando a tarefa de envio:" . json_encode($boletos_id) . "\n\n");
         $this->call("ln:send-boleto", ["boletos_id" => $boletos_id ]);
     }
 

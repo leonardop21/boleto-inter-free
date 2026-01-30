@@ -28,8 +28,31 @@ class AppServiceProvider extends ServiceProvider
             'App\Repositories\BoletoRepository'
           );
           $this->app->bind(
-            'App\Interfaces\WhatsAppInterface',
-            'App\Repositories\WhatsAppRepository'
+            'App\Interfaces\HolidayInterface',
+            'App\Repositories\HolidayRepository'
+          );
+          $this->app->bind(
+            'App\Interfaces\NfeInterface',
+            'App\Repositories\NfeRepository'
+          );
+          $this->app->bind(
+            'App\Interfaces\CustomerNfeTypeInterface',
+            'App\Repositories\CustomerNfeTypeRepository'
+          );
+
+          $this->app->bind(
+            'App\Interfaces\PixInterface',
+            'App\Repositories\PixRepository'
+          );
+
+          $this->app->bind(
+            'App\Interfaces\SendInterface',
+            'App\Repositories\SendRepository'
+          );
+
+          $this->app->bind( 
+            'App\Interfaces\NotifishInterface',
+            'App\Repositories\NotifishRepository'
           );
     }
 

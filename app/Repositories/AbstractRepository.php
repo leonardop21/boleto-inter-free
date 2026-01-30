@@ -37,11 +37,13 @@ abstract class AbstractRepository
     }
 
     public function store($data){
-       return $this->model::create($data);
+        $dados = array_key_exists('query', $data) ? array_diff_key($data, ['query' => '']) : $data;
+       return $this->model::create($dados);
     }
     public function update($data, $id){
         $find = $this->model::find($id);
-        $find->update($data);
+        $dados = array_key_exists('query', $data) ? array_diff_key($data, ['query' => '']) : $data;
+        $find->update($dados);
         return $find;
     }
 
@@ -62,6 +64,15 @@ abstract class AbstractRepository
         }
         return Cache::tags([$this->tableCache])->get('_record_id_' . $id);
     }
+    
+    public function findByUuid($uuid)
+    {
+        if(!Cache::tags($this->tableCache)->has('_record_uuid_' . $uuid)){
+            $records = $this->model::where('uuid', $uuid)->first();
+            Cache::tags([$this->tableCache])->put('_record_uuid_' . $uuid, $records, $this->time_cache);
+        }
+        return Cache::tags([$this->tableCache])->get('_record_uuid_' . $uuid);
+    }
 
     public function paginate() {
         $page = request()->get('page', 1);
@@ -76,14 +87,8 @@ abstract class AbstractRepository
     public function forgetCacheTag(){
        Cache::tags($this->tableCache)->flush();
     }
-    public function searchName($search){
-        $page = request()->get('page', 1);
-        $queryPut = '_page_' . $page . '_search_' . \Str::slug($search);
-        if(!Cache::tags($this->tableCache)->has($queryPut)){
-            $records = $this->model::where('name', 'Like', '%' . $search . '%')->orderBy('id', 'desc')->paginate(10);
-            Cache::tags([$this->tableCache])->put($queryPut, $records, 86400 * 7);
-        }
-        return Cache::tags([$this->tableCache])->get($queryPut);
+    public function search($search, $field){
+        return $this->model::where($field, 'Like', '%' . $search . '%')->orderBy('id', 'desc')->paginate(10);
     }
 
     public function delete($id){

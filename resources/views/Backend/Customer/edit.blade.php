@@ -142,15 +142,45 @@
                   </div>
               </div>
               <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="generate_nfe">Gerar Nota fiscal</label>
+                    <select name="generate_nfe" id="generate_nfe" class="form-control" required>
+                        <option value="1" {{$customer->generate_nfe == 1 ? "selected" : ''}}>SIM</option>
+                        <option value="0" {{$customer->generate_nfe == 0 ? "selected" : ''}}>NÃO</option>
+                    </select>
+                    <small>Se marcado como sim, gera NF automaticamente</small>
+                  </div>
+                <div class="form-group col-md-6">
+                    <label for="customer_nfe_type_id">Selecione o serviço para geração de NFe</label>
+                    <select name="customer_nfe_type_id" id="status" class="form-control">
+                        <option value="">Selecione um serviço para gerar NFe</option>
+                        @foreach($nfeTypes as $nfe)
+                            <option value="{{$nfe->id}}" {{$customer->customer_nfe_type_id == $nfe->id ? 'selected' : ''}}>{{$nfe->code_item_service}} - {{$nfe->name}} </option>
+                        @endforeach
+                      </select>
+                      <small>Status Inativo não gera boleto</small>
+                  </div>
+              </div>
+              <div class="form-row">
                 <div class="form-group col">
                     <label for="expiration_day_boleto">Melhor dia para pagamento*</label>
                     <select name="expiration_day_boleto" id="expiration_day_boleto" class="form-control" required>
                         <option value="">Selecione um dia</option>
-                        @for($i=1; $i <= 25; $i++)
-                            <option value="{{$i}}" {{$customer->expiration_day_boleto == $i ? 'selected' : ''}}>{{$i}}</option>
+                        @for($i=1; $i <= 30; $i++)
+                            <option value="{{str_pad($i, 2, '0', STR_PAD_LEFT)}}" {{$customer->expiration_day_boleto == $i ? 'selected' : ''}}>{{$i}}</option>
                         @endfor
                     </select>
                     <small>Ex: Todo dia 10 será o vencimento do boleto</small>
+                  </div>
+                <div class="form-group col">
+                    <label for="date_to_pay_after_due_date">Quantos dias para pagar após vencimento?*</label>
+                    <select name="date_to_pay_after_due_date" id="date_to_pay_after_due_date" class="form-control" required>
+                        <option value="">Selecione um dia</option>
+                        @for($i=1; $i <= 30; $i++)
+                            <option value="{{str_pad($i, 2, '0', STR_PAD_LEFT)}}" {{$customer->date_to_pay_after_due_date == $i ? 'selected' : ''}}>{{$i}}</option>
+                        @endfor
+                    </select>
+                    <small>Quantos dias após o vencimento, o boleto ainda poderá ser pago?*</small>
                   </div>
                 <div class="form-group col">
                     <label for="status">Status do cliente no sistema</label>
@@ -160,6 +190,79 @@
                       </select>
                       <small>Status Inativo não gera boleto</small>
                   </div>
+              </div>
+              <hr style="border-top: 1px solid #fff;">
+              <h5 class="mb-4">Multa</h5>
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="code_multa">Código da multa*</label>
+                    <select name="code_multa" id="code_multa" class="form-control" required>
+                        <option value="">Selecione um código</option>
+                        <option value="NAOTEMMULTA" {{$customer->code_multa == "NAOTEMMULTA" ? 'selected' : ''}}>Isento</option>
+                        <option value="VALORFIXO" {{$customer->code_multa == "VALORFIXO" ? 'selected' : ''}}>Valor Fixo</option>
+                        <option value="PERCENTUAL" {{$customer->code_multa == "PERCENTUAL" ? 'selected' : ''}}>Percentual</option>
+                    </select>
+                  </div>
+                <div class="form-group col-md-6">
+                    <label for="data_multa">Multa a partir do dia</label>
+                    <select name="data_multa" id="data_multa" class="form-control">
+                        <option value="">Selecione um dia</option>
+                        @for($i=1; $i <= 30; $i++)
+                            <option value="{{str_pad($i, 2, '0', STR_PAD_LEFT)}}" {{$customer->data_multa == $i ? 'selected' : ''}}>{{$i}}</option>
+                        @endfor
+                      </select>
+                      <small>Obrigatório se informado código de multa VALOR FIXO ou PERCENTUAL. Deve ser maior que o vencimento e marca a data de início de cobrança
+                        de multa (incluindo essa data)</small>
+                  </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="taxa_multa">Taxa da multa* (Percentual)</label>
+                    <input type="text" name="taxa_multa" class="form-control" value="{{$customer->taxa_multa}}" placeholder="Insira apenas números separados por ponto. Ex: 1.7">
+                    <small>Taxa Percentual de Multa do título. Obrigatória se informado código
+                        de multa PERCENTUAL. Deve ser 0 para código de multa ISENTO</small>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="valor_multa">Valor da multa* (Valor Fixo)</label>
+                    <input type="text" name="valor_multa" class="form-control" value="{{$customer->valor_multa}}" placeholder="Insira apenas números separados por ponto. Ex: 1.7">
+                    <small>Obrigatório se informado código de multa Valor Fixo. Deve ser 0 para código de multa ISENTO</small>
+                </div>
+              </div>
+              <hr style="border-top: 1px solid #fff;">
+              <h5 class="mb-4">Mora</h5>
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="code_mora">Código da Mora*</label>
+                    <select name="code_mora" id="code_mora" class="form-control" required>
+                        <option value="">Selecione um código</option>
+                        <option value="ISENTO" {{$customer->code_mora == "ISENTO" ? 'selected' : ''}}>Isento</option>
+                        <option value="VALORDIA" {{$customer->code_mora == "VALORDIA" ? 'selected' : ''}}>Valor diário</option>
+                        <option value="TAXAMENSAL" {{$customer->code_mora == "TAXAMENSAL" ? 'selected' : ''}}>Taxa Mensal</option>
+                    </select>
+                  </div>
+                <div class="form-group col-md-6">
+                    <label for="data_mora">Mora a partir do dia</label>
+                    <select name="data_mora" id="data_mora" class="form-control" required>
+                        <option value="">Selecione um dia</option>
+                        @for($i=1; $i <= 30; $i++)
+                            <option value="{{str_pad($i, 2, '0', STR_PAD_LEFT)}}" {{$customer->data_mora == $i ? 'selected' : ''}}>{{$i}}</option>
+                        @endfor
+                      </select>
+                      <small>Obrigatório se informado código de mora Valor diário, Taxa mensal. Deve ser maior que o vencimento e marca a data de início de cobrança</small>
+                  </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="taxa_mora">Taxa de mora* (Taxa Mensal)</label>
+                    <input type="text" name="taxa_mora" class="form-control" value="{{$customer->taxa_mora}}" placeholder="Insira apenas números separados por ponto. Ex: 1.5">
+                    <small>Percentual de Mora do título.
+                        Obrigatória se informado código de mora Taxa Mensal</small>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="valor_mora">Valor da mora* (Valor Fixo)</label>
+                    <input type="text" name="valor_mora" class="form-control" value="{{$customer->valor_mora}}" placeholder="Insira apenas números separados por ponto. Ex: 1.0">
+                    <small>Obrigatório se informado código de mora Taxa Mensal. Deve ser 0 para código de mora ISENTO.</small>
+                </div>
               </div>
               <button type="submit" class="btn btn-primary">Atualizar cliente</button>
             </div>

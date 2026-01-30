@@ -1,78 +1,73 @@
 <template>
-    <div>
-        <li class="nav-item d-none d-sm-inline-block">
-           <i class="text-success fas fa-circle" v-if="infoStatus.status == true" title="Online no WhatsApp"> ONLINE WHATSAPP</i>
-           <i class="text-danger fas fa-circle" v-if="infoStatus.status == false && revaliditing == false" title="Seção online"> Offline WHATSAPP
-               <a v-on:click="revalidateSession" class="text-success" href="#"><strong>RECONECTAR</strong></a>
-               </i>
-           <i class="text-warning fas fa-circle" v-if="infoStatus.status == 3"> Atenção</i>
-           <i class="text-warning fas fa-circle" v-if="revaliditing"> Reconectando, isso pode demorar até 2 minutos</i>
-      </li>
-    </div>
+  <div>
+    <li class="nav-item d-none d-sm-inline-block">
+      <i v-if="isVerifying" class="text-warning fas fa-circle-notch" title="Verificando status">
+        Verificando status do WhatsApp...
+      </i>
+      <i v-else-if="connected" class="text-success fas fa-circle" title="Online no WhatsApp">
+        ONLINE WHATSAPP
+      </i>
+      <span v-else class="d-inline">
+        <i class="text-danger fas fa-circle" title="Offline"> Offline WHATSAPP</i>
+        <a :href="loginUrl" class="text-success ml-1"><strong>Conectar (escanear QR Code)</strong></a>
+      </span>
+    </li>
+  </div>
 </template>
 
 <script>
-  export default {
-    data() {
-      return {
-        urlCheckStatus: '/painel/whatsapp/check-status',
-        infoStatus: false,
-        infoBattery: false,
-        generateUrl: '',
-        revaliditing: false,
-        expireValidated: '',
-      }
-    },
-    props: ['revalidateUrl'],
-    methods: {
-      revalidateSession: function revalidateSession(){
-          var self = this;
-          sessionStorage.setItem('expireValidated', self.expireValidated);
-          axios.get(self.generateUrl).then(function(response){
-              self.revaliditing = true;
-            alert('Inicializando, isso pode levar até 2 minutos');
-        }).catch(function(error){
-          alert('Ocorreu um erro ao tentar revalidar, a página será recarregada automaitcamente. Por favor, tente novamente');
-          document.location.reload(true);
-        })
-      },
-      checkStatus: function checkStatus(){
-        const requestStatus = axios.get(this.urlCheckStatus);
-        axios
-          .all([requestStatus])
-          .then(
-            axios.spread((...responses) => {
-              const responseStatus = responses[0]['data'];
-              this.infoStatus = responseStatus;
-            })
-          ).finally(() => {
-              if(this.infoStatus.status){
-                this.revaliditing = false;
-              }
-              else if(this.infoStatus.status == false){
-                document.title = "Sessão Offline";
-              }else{
-                document.title = "Ocorreu um erro";
-              }
-            })
-          .catch(errors => {
-            document.title = "Erro";
-          });
-      }
-    },
-    beforeDestroy: function () {
-    	this.checkStatus.destroy();
-	},
-    mounted() {
-      this.generateUrl = '/painel/whatsapp/';
-      this.checkStatus();
-      this.expireValidated = parseInt(this.revalidateUrl) + parseInt(2);
-      if(typeof sessionStorage.getItem('expireValidated') !== undefined && parseInt(sessionStorage.getItem('expireValidated')) > parseInt(this.revalidateUrl)){
-        this.revaliditing = true;
-      }else {
-          this.revaliditing = false;
-          sessionStorage.removeItem('expireValidated')
-      }
+export default {
+  name: 'CheckStatusWhatsApp',
+  data() {
+    return {
+      urlCheckStatus: '/dashboard/whatsapp/check-status',
+      connected: false,
+      loading: true,
+      checking: false,
+      interval: null
     }
+  },
+  computed: {
+    isVerifying() {
+      return this.loading || this.checking
+    },
+    loginUrl() {
+      return '/dashboard/whatsapp'
+    }
+  },
+  methods: {
+    checkStatus() {
+      if (this.checking) return;
+      this.checking = true;
+
+      axios
+        .get(this.urlCheckStatus)
+        .then(response => {
+          // Novo formato: { success: true, message: "...", data: { status: "...", connected: true/false } }
+          // Formato antigo: { status: "..." }
+          const data = response.data.data || response.data;
+          
+          this.connected = data && (data.status === 'open' || data.connected === true);
+          document.title = this.connected ? 'Sessão Online' : 'Sessão Offline';
+        })
+        .catch(() => {
+          this.connected = false;
+          document.title = 'Sessão Offline';
+        })
+        .finally(() => {
+          this.loading = false;
+          this.checking = false;
+        });
+    }
+  },
+  mounted() {
+    this.checkStatus()
+    this.interval = setInterval(this.checkStatus, 300000)
+  },
+  beforeDestroy() {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
+  }
 }
 </script>

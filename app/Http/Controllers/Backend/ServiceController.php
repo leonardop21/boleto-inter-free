@@ -85,6 +85,11 @@ class ServiceController extends Controller
             ->with(['message' => 'Serviço atualizado com sucesso!', 'alert-type' => 'success']);
     }
 
+    public function search(Request $request){
+        $records = $this->service->search($request->search, $request->type_search);
+        return view('Backend.Service.index', compact('records'));
+    }
+
     /**
      * Remove the specified resource from storage.
      *

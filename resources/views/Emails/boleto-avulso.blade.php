@@ -11,6 +11,9 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style type="text/css">
+         .bg-background {
+            background-color: #090324;
+        }
         #outlook a {
             padding: 0;
         }
@@ -168,14 +171,14 @@
                                 <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:bottom;" width="100%">
 
                                     <tr>
-                                        <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                                        <td class="bg-background" align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
 
                                             <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
                                                 <tbody>
                                                     <tr>
-                                                        <td style="width:64px;">
+                                                        <td style="width:250px;">
 
-                                                            <img height="auto" src="https://i.imgur.com/KO1vcE9.png" style="border:0;display:block;outline:none;text-decoration:none;width:100%;" width="64" />
+                                                            <img height="auto" src="https://i.imgur.com/PjuRhTU.png" style="border:0;display:block;outline:none;text-decoration:none;width:100%;" width="64" />
 
                                                         </td>
                                                     </tr>
@@ -186,8 +189,7 @@
                                     </tr>
 
                                     <tr>
-                                        <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-
+                                        <td align="center" style="font-size:0px;padding:20px 0px 10px 0px;word-break:break-word;">
                                             <div style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:24px;font-weight:bold;line-height:22px;text-align:center;color:#525252;">
                                                 Seu boleto chegou!
                                             </div>
@@ -218,7 +220,7 @@
                                         <tr>
                                             <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
                                                 <div style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;line-height:22px;text-align:left;color:#525252;">
-                                                    <p><strong>Chave pix: {{env('CHAVE_PIX')}}</strong></p>
+                                                    <p><strong>Pix Copia e cola: {{$boleto->pixCopiaECola}}</strong></p>
                                                 </div>
                                             </td>
                                         </tr>

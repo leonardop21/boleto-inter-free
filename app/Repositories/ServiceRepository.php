@@ -25,6 +25,11 @@ class ServiceRepository extends AbstractRepository implements ServiceInterface
         return $this->abs::update($data, $id);
     }
 
+    public function search($search, $field)
+    {
+        return $this->abs::search($search, 'name');
+    }
+
     public function destroy($id)
     {
 

@@ -19,6 +19,17 @@ class CustomerRepository extends AbstractRepository implements CustomerInterface
             });
         return $records;
     }
+    
+    public function customerActiveWithNfe($with){
+        $tableCache = $this->model->getTable();
+
+        if(!Cache::tags($tableCache)->has('_get_active_with_nfe')){
+            $records = $this->model::where(
+                [['status', '=', '1'], ['generate_nfe', '=', '1']])->with($with)->orderBy('id', 'desc')->get();
+            Cache::tags([$tableCache])->put('_get_active_with_nfe', $records, env('TIME_CACHE_IN_SECONDS'));
+        }
+        return Cache::tags([$tableCache])->get('_get_active_with_nfe');
+    }
 
     public function customerWithPaginate($with){
         $page = request()->get('page', 1);
@@ -60,6 +71,11 @@ class CustomerRepository extends AbstractRepository implements CustomerInterface
         
         $customer = $this->abs::update($data, $id);
         $customer->services()->sync($services);
+    }
+
+    public function search($search, $field)
+    {
+        return $this->abs::search($search, $field);
     }
 
     public function destroy($id)

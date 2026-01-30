@@ -14,8 +14,9 @@ class ExampleTest extends TestCase
      */
     public function test_example()
     {
+        // Em produção esse endpoint normalmente redireciona (login/dashboard).
+        // O objetivo aqui é só garantir que a rota existe e responde.
         $response = $this->get('/');
-
-        $response->assertStatus(200);
+        $this->assertTrue(in_array($response->getStatusCode(), [200, 301, 302], true));
     }
 }

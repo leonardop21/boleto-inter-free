@@ -33,6 +33,15 @@ class CreateCustomersTable extends Migration
             $table->string('whatsapp', 20)->index()->nullable();
             $table->string('telegram', 50)->nullable();
             $table->integer('expiration_day_boleto')->comment('Dia do vencimento do boleto');
+            $table->enum('code_multa', ['NAOTEMMULTA', 'VALORFIXO', 'PERCENTUAL'])->nullable();
+            $table->string('data_multa')->nullable();
+            $table->string('taxa_multa')->nullable();
+            $table->string('valor_multa')->nullable();
+            $table->enum('code_mora', ['ISENTO', 'VALORDIA', 'TAXAMENSAL'])->nullable();
+            $table->string('data_mora')->nullable();
+            $table->string('taxa_mora')->nullable();
+            $table->string('valor_mora')->nullable();
+            $table->integer('date_to_pay_after_due_date')->nullable();
             $table->enum('email_notify', [0,1]);
             $table->enum('whatsapp_notify', [0,1]);
             $table->enum('telegram_notify', [0,1]);
@@ -40,6 +49,7 @@ class CreateCustomersTable extends Migration
             $table->timestamps();
         });
     }
+    
 
     /**
      * Reverse the migrations.

@@ -10,6 +10,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\BoletoRequest;
 use App\Interfaces\CustomerInterface;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use App\Exceptions\InterCertificateException;
+use Bugsnag\BugsnagLaravel\Facades\Bugsnag;
 
 class BoletoController extends Controller
 {
@@ -28,7 +31,7 @@ class BoletoController extends Controller
     {
         $customer_id = $request->customer_id ? $request->customer_id : null;
         $records = $this->boleto->withPaginate(['customer'], $customer_id);
-        return view('Backend.Boleto.index', compact('records', 'customer_id'));
+        return view('Backend.Fatura.Boleto.index', compact('records', 'customer_id'));
     }
 
     /**
@@ -39,7 +42,7 @@ class BoletoController extends Controller
     public function create()
     {
         $customers = $this->customer->get(true);
-        return view('Backend.Boleto.create', compact('customers'));
+        return view('Backend.Fatura.Boleto.create', compact('customers'));
     }
 
     /**
@@ -50,18 +53,24 @@ class BoletoController extends Controller
      */
     public function store(BoletoRequest $request)
     {
+       $result = $this->boleto->store($request->all());
+       $result = $this->boleto->handleStoreResponse($result);
 
-       $response = $this->boleto->store($request->all());
+       
+       
 
-       if($response->getStatusCode() != 200){
-           $decode = json_decode($response);
-           $mesesage =  "Falha ao gerar boleto {$decode->_embedded->errors[0]->message} código da resposta:  {$response->getStatusCode()} mensagem: {$decode->message}";
-            
-        return redirect()->back()
-        ->withErrors(['message' => $mesesage]);
+       if (!$result['success']) {
+           $errors = $this->boleto->extractInterErrors($result['response'] ?? null);
+           
+           if (empty($errors)) {
+               $errors = ['Erro ao gerar boleto. Tente novamente.'];
+           }
+
+           return redirect()->back()
+            ->withErrors($errors);
        }
 
-        return redirect()->route('backend.boleto.index')
+        return redirect()->route('backend.fatura.boleto.index')
             ->with(['message' => 'Boleto gerado com sucesso!', 'alert-type' => 'success']);
     }
 
@@ -77,7 +86,7 @@ class BoletoController extends Controller
 
         $this->boleto->update(["email_notify_send" => date("Y-m-d H:i:s")], $id);
 
-        return redirect()->route('backend.boleto.index')
+        return redirect()->route('backend.fatura.boleto.index')
             ->with(['message' => 'Boleto enviado com sucesso!', 'alert-type' => 'success']);
         
     }
@@ -87,7 +96,7 @@ class BoletoController extends Controller
 
         $this->boleto->update(["email_notify_send" => date("Y-m-d H:i:s")], $id);
 
-        return redirect()->route('backend.boleto.index')
+        return redirect()->route('backend.fatura.boleto.index')
             ->with(['message' => 'Boleto enviado com sucesso!', 'alert-type' => 'success']);
     }
 
@@ -109,12 +118,15 @@ class BoletoController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UpdateBoletoRequest $request, $id)
     {
-        $this->boleto->update(["status" => $request->status, 'payment_date' => $request->payment_date], $id);
+        $this->boleto->update([
+            "status" => $request->status, 
+            'payment_date' => $request->payment_date
+        ], $id);
 
         return redirect()->back()
-      ->with(['message' => 'Status do boleto ' . $id . ' atualizado com sucesso', 'alert-type' => 'success']);
+            ->with(['message' => 'Status do boleto ' . $id . ' atualizado com sucesso', 'alert-type' => 'success']);
     }
 
     /**
@@ -125,14 +137,34 @@ class BoletoController extends Controller
      */
     public function cancel($id)
     {
-      $response = $this->boleto->cancel($id);
-        
-      $mesesage = $response->status == 204 ?  $response->message : $response->message;
-      $type = $response->status == 204 ?  "success" : "error";
+        $response = $this->boleto->cancel($id);
 
-      return redirect()->back()
-      ->with(['message' => $mesesage, 'alert-type' => $type]);
-    
+        $success = isset($response['success']) && $response['success'] === true;
+        $status = $response['status'] ?? 500;
+        $message = $response['message'] ?? ($success ? 'Boleto cancelado com sucesso' : 'Erro ao cancelar boleto');
+        $type = $success ? 'success' : 'error';
+
+        if (!$success) {
+            Log::channel('single')->error('Falha ao cancelar boleto', [
+                'boleto_id' => $id,
+                'response'  => $response,
+            ]);
+            Bugsnag::notify(
+                new \Exception("Falha ao cancelar boleto: {$message}"),
+                function ($report) use ($id, $response) {
+                    $report->setMetaData([
+                        'cancelar_boleto' => [
+                            'boleto_id' => $id,
+                            'response'  => $response,
+                            'raw_body'  => $response['raw_body'] ?? null,
+                        ],
+                    ]);
+                }
+            );
+        }
+
+        return redirect()->back()
+            ->with(['message' => $message, 'alert-type' => $type]);
     }
 
     public function downloadPdf($boleto){
@@ -156,5 +188,63 @@ class BoletoController extends Controller
 
         $nameBoleto = preg_replace('/[^a-z0-9]/i', '_', $response->name_boleto);
         return response()->download($urlDownload, $nameBoleto . ".pdf");
-     }
+    }
+
+    /**
+     * Download do PDF do boleto via URL assinada (pública, sem auth).
+     * Usado pelo Notifish para enviar o arquivo via WhatsApp.
+     * Identificador: our_number do Inter (não expõe ID interno); expira em 10 min.
+     */
+    public function downloadPdfSigned(Request $request)
+    {
+        $ourNumber = $request->query('our_number');
+        if (empty($ourNumber)) {
+            abort(404);
+        }
+
+        $boleto = Boleto::where('our_number', $ourNumber)->firstOrFail();
+        $response = $this->boleto->getPdf($boleto->id);
+
+        if ($response->getStatusCode() != 200) {
+            abort(404);
+        }
+
+        $content = json_decode($response->getContent());
+        $urlDownload = isset($content->url_download->original) ? $content->url_download->original->url_download : $content->url_download;
+        $nameBoleto = preg_replace('/[^a-z0-9]/i', '_', $content->name_boleto);
+
+        return response()->download($urlDownload, $nameBoleto . '.pdf');
+    }
+
+    public function createWebhook(){
+        $result = $this->boleto->createWebhook();
+
+        $message = $result['message'] ?? 'Operação realizada';
+        $type = $result['success'] ? "success" : "error";
+ 
+        return redirect()->route('backend.fatura.boleto.get.webhook')
+            ->with(['message' => $message, 'alert-type' => $type]);
+    }
+
+    public function getWebhook(){
+       try{
+           $response = $this->boleto->getWebhook();
+
+           $record['status'] = $response->getStatusCode();
+           $record['body']   = json_decode($response->getBody(), true);
+       }catch(InterCertificateException $e){
+           $record['status'] = 500;
+           $record['body']   = ['message' => $e->getMessage()];
+
+           session()->flash('message', $e->getMessage());
+           session()->flash('alert-type', 'error');
+       }
+
+       return view('Backend.Fatura.Boleto.webhook', compact('record'));
+    }
+
+    public function callbackInter(Request $request){
+        $result = $this->boleto->callbackInter($request->all());
+        return response()->json(['status' => 'ok'], 200);
+    }
 }

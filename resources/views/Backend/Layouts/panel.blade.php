@@ -16,6 +16,9 @@
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
   <link rel="stylesheet" href="/admin-lte-assets/css/select2-bootstrap4.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/admin-lte-assets/css/select2.min.css" rel="stylesheet">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   @yield('css')  
 </head>
 <body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed layout-footer-fixed {{env('DARK_MODE') ? 'dark-mode' : ''}}">
@@ -44,15 +47,20 @@
         <a href="{{route('backend.service.create')}}" class="nav-link">Adicionar Serviço</a>
       </li>
       <li class="nav-item d-none d-sm-inline-block">
-        <a href="{{route('backend.boleto.create')}}" class="nav-link">Gerar boleto</a>
+        <a href="{{route('backend.fatura.pix.create')}}" class="nav-link">Gerar Pix</a>
+      </li>
+      <li class="nav-item d-none d-sm-inline-block">
+        <a href="{{route('backend.fatura.boleto.create')}}" class="nav-link">Gerar boleto</a>
       </li>
     </ul>
 
     <!-- Right navbar links -->
-    @if(!empty(env('WHATSAPP_SESSION')))
-      <ul class="navbar-nav ml-auto">
-        <check-status-whats></check-status-whats>
-      </ul>
+    @if(!empty(env('NOTIFISH_UUID')))
+      @if(request()->routeIs('backend.index', 'backend.fatura.boleto.index', 'backend.fatura.pix.index'))
+        <ul class="navbar-nav ml-auto">
+          <check-status-whats></check-status-whats>
+        </ul>
+      @endif
     @endif
   </nav>
   <!-- /.navbar -->
@@ -61,7 +69,7 @@
   <aside class="main-sidebar elevation-4 {{env('DARK_MODE') ? 'sidebar-dark-primary' : 'sidebar-light-primary'}}">
     <!-- Brand Logo -->
     <a href="/" class="brand-link">
-      <img src="/admin-lte-assets/img/AdminLTELogo.png" alt="Boleto Inter Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+      <img src="/admin-lte-assets/img/lnsistemas.png" alt="Boleto Inter Logo" class="brand-image img-cirecle elevation-3" style="opacity: .8; max-height:40px!important;">
       <span class="brand-text font-weight-light">{{env('APP_NAME')}}</span>
     </a>
 
@@ -70,9 +78,9 @@
       <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
-          <img src="/admin-lte-assets/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
+          <img src="https://i.imgur.com/M7eDYTH.jpg" class="img-circle elevation-2" alt="{{Auth()->user()->name}}" style="width:4.5rem!important;">
         </div>
-        <div class="info">
+        <div class="info mt-3">
           <a href="#" class="d-block">{{Auth()->user()->name}}</a>
         </div>
       </div>
@@ -120,10 +128,89 @@
             </a>
           </li>
           <li class="nav-item">
-            <a href="{{route('backend.boleto.index')}}" class="nav-link">
-              <i class="nav-icon fas fa-receipt"></i>
+            <a href="#" class="nav-link">
+             <i class="nav-icon fas fa-receipt"></i>
               <p>
-                  Boletos
+                Faturas
+                <i class="fas fa-angle-left right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview" style="display: none;">
+              <li class="nav-item">
+                <a href="{{route('backend.fatura.boleto.index')}}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Boletos</p>
+                </a>
+              </li>
+              <li class="nav-item">
+              <a href="{{route('backend.fatura.pix.index')}}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Pix</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+
+
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+             <i class="nav-icon fas fa-exchange-alt"></i>
+              <p>
+                Webhook
+                <i class="fas fa-angle-left right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview" style="display: none;">
+              <li class="nav-item">
+                <a href="{{route('backend.fatura.boleto.get.webhook')}}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Boleto</p>
+                </a>
+              </li>
+              <li class="nav-item">
+              <a href="{{route('backend.fatura.pix.get.webhook')}}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Pix</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          @if(!empty(env('NFE_BASE_URL')) && !empty(env('CIDADE_ID_NFE')) && !empty(env('AUTHORIZATION_NFE')) && !empty(env('CNPJ_NF_PRESTADOR')))
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fab fa-nav-icon fas fa-skull-crossbones"></i>
+              <p>
+                Notas Fiscais
+                <i class="fas fa-angle-left right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview" style="display: none;">
+              <li class="nav-item">
+                <a href="{{route('backend.nfe.index')}}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Lista de notas</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{route('backend.nfe.indexTypeNote')}}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Listar tipo de nota</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{route('backend.nfe.create')}}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Cadastrar tipo de nota</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          @endif
+          <li class="nav-item">
+            <a href="{{route('backend.get-month-report', ['ano' => date('Y'), 'mes' => date('m')])}}" class="nav-link">
+              <i class="nav-icon fas fa-file-pdf"></i>
+              <p>
+                Extrato mês PDF
               </p>
             </a>
           </li>
@@ -143,12 +230,26 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{{route('backend.whatsapp.close.session')}}" onclick="return confirm('Tem certeza que deseja encerrar a sessão no WhatsApp e no site?')" class="nav-link">
+                <a href="{{route('backend.whatsapp.restart')}}" onclick="return confirm('Tem certeza que deseja reiniciar o WhatsApp?')" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Reiniciar WhatsApp</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{route('backend.whatsapp.logout')}}" onclick="return confirm('Tem certeza que deseja encerrar a sessão no WhatsApp e no site?')" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Encerrar sessão</p>
                 </a>
               </li>
             </ul>
+          </li>
+          <li class="nav-item">
+            <a href="{{route('backend.feriado.index')}}" class="nav-link">
+              <i class="nav-icon fas fa-lock"></i>
+              <p>
+                Feriados
+              </p>
+            </a>
           </li>
           <li class="nav-item">
             <a href="{{route('backend.cache-clear')}}" class="nav-link" onclick="return confirm('Tem certeza que deseja limpar o cache de todo o sistema?')">
@@ -179,31 +280,8 @@
   <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <!-- Main content -->
-    <section class="content">
+    <section class="content mt-n3">
       <div class="container-fluid">
-          <div class="modal fade" id="pay-coffe" tabindex="-1" role="dialog" aria-labelledby="pay-coffeTitle" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title d-block mx-auto">☕☕ Esse projeto foi útil para você? Aceito um café ☕☕</h5>
-                  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                  </button>
-                </div>
-                <div class="modal-body">
-                    <div class="text-center">
-                      <h5>Chave aleatória: <strong>9b9835e9-7161-4f07-baba-d4a0e7c8430b</strong></h5>
-                      <img src="https://i.imgur.com/NxyfW7K.jpg" height="400">
-                        <input type="hidden" value="9b9835e9-7161-4f07-baba-d4a0e7c8430b">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                  <a target="_blank" href="https://github.com/leonardop21/boleto-inter-free#versão-pro" class="btn btn-success" rel="noopener">Conheça a versão pro</a>
-                  <button type="button" class="btn btn-danger" onclick="noCoffee(1)">Fechar e não mostrar mais</button>
-                </div>
-              </div>
-            </div>
-          </div>
         @yield('content')
       </div><!--/. container-fluid -->
     </section>
@@ -227,7 +305,7 @@
   </footer>
 </div>
 <!-- ./wrapper -->
-<script src="{{ mix('/js/app.js') }}?v=2"></script>
+<script src="{{ mix('/js/app.js') }}?v=3"></script>
 
 <!-- REQUIRED SCRIPTS -->
 <!-- jQuery -->
@@ -240,15 +318,15 @@
 <script src="/admin-lte-assets/js/adminlte.js"></script>
 
 <!-- PAGE /PLUGINS -->
-<!-- jQuery Mapael -->
-<script src="/plugins/jquery-mousewheel/jquery.mousewheel.js"></script>
-<script src="/plugins/raphael/raphael.min.js"></script>
-<script src="/plugins/jquery-mapael/jquery.mapael.min.js"></script>
-<script src="/plugins/jquery-mapael/maps/usa_states.min.js"></script>
-<!-- ChartJS -->
-<script src="/plugins/chart.js/Chart.min.js"></script>
-
-<script src="/admin-lte-assets/js/pages/dashboard2.js"></script>
+<!-- jQuery Mapael (comentado - não usado) -->
+<!-- <script src="/plugins/jquery-mousewheel/jquery.mousewheel.js"></script> -->
+<!-- <script src="/plugins/raphael/raphael.min.js"></script> -->
+<!-- <script src="/plugins/jquery-mapael/jquery.mapael.min.js"></script> -->
+<!-- <script src="/plugins/jquery-mapael/maps/usa_states.min.js"></script> -->
+<!-- ChartJS (comentado - não usado) -->
+<!-- <script src="/plugins/chart.js/Chart.min.js"></script> -->
+<!-- dashboard2.js (comentado - não usado, causava erro) -->
+<!-- <script src="/admin-lte-assets/js/pages/dashboard2.js"></script> -->
 <script src="/admin-lte-assets/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script type="text/javascript">
@@ -297,27 +375,6 @@ $(function () {
                   break;
           }
       @endif
-
-
-      var getCoffee = localStorage.getItem("no-coffe");
-      var getElementId = document.getElementById("pay-coffe");
-
-      function noCoffee(arg){
-        if(!getCoffee){
-          $("#pay-coffe").modal('show')
-        }
-
-        if(arg){
-          $("#pay-coffe").modal('hide')
-          localStorage.setItem("no-coffe", 1);
-          location.reload();
-        }
-      }
-      if(!getCoffee){
-        setTimeout(function () {
-          noCoffee();
-      }, 7000);
-    }
     </script>
 @yield('js')
 </body>
